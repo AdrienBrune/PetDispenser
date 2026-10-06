@@ -1,0 +1,19 @@
+# VSC
+.vscode
+.devcontainer
+
+# CAD
+**/3D parts
+PCB
+
+# ESP IDF
+partitions.csv
+sdkconfig
+sdkconfig.defaults
+sdkconfig.old
+managed_components
+
+build
+.clangd
+help.md
+dependencies.lock
