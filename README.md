@@ -1,12 +1,13 @@
 <div align="center">
 
-# 🔥 Smart kibble dispenser
+# 🐈 Smart kibble dispenser
 
 <p align="center">
-  <img width="364" height="341" alt="image" src="https://github.com/user-attachments/assets/d4e8ff6c-9ebc-4495-95e6-1a24c7aaa75e" style="border-radius: 8px;" />
+  <img width="437" height="600" alt="image" src="https://github.com/user-attachments/assets/1c3c7d2b-0b0b-477c-a942-fa4ac9ef19da" style="border-radius: 8px;" />
+
 </p>
 
-*An automated kibble dispenser, powered by an ESP32, infrared distance sensors, step motor and native Zigbee integration for Home Assistant.*
+*An automated kibble dispenser, powered by an ESP32, infrared distance sensors, step motor and Zigbee integration for Home Assistant.*
 
 ---
 
@@ -19,6 +20,7 @@
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
 </div>
+
 ## 💡 Introduction
 
 Never run out of pet food again! The **Smart Pet Feeder Level Monitor** is a DIY IoT solution designed to monitor your pet food reserve in real-time. 
