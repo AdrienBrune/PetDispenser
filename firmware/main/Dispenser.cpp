@@ -16,12 +16,10 @@ void Dispenser::Init()
     
     uint32_t motorSpeed = std::clamp(Memory::GetMemory().Get<uint32_t>(DATA_MOTOR_SPEED), static_cast<uint32_t>(eMotorSpeed::slow), static_cast<uint32_t>(eMotorSpeed::fast));
     m_motor->SetSpeed(static_cast<eMotorSpeed>(motorSpeed));
-    
-    float tourPerPortion = Memory::GetMemory().Get<float>(DATA_PORTION_PER_TURN);
-    m_calibrationPortionPerTurn = tourPerPortion;
-    
-    float tankLevel = Memory::GetMemory().Get<float>(DATA_TANK_FILLING);
-    m_tankLevel = tankLevel;
+    m_motor->SetSleepMode(Memory::GetMemory().Get<bool>(DATA_SLEEP_MODE));
+    m_PortionWeight = Memory::GetMemory().Get<float>(DATA_PORTION_WEIGHT);
+    m_calibrationPortionPerTurn = Memory::GetMemory().Get<float>(DATA_PORTION_PER_TURN);
+    m_tankLevel = Memory::GetMemory().Get<float>(DATA_TANK_FILLING);
 }
 
 void Dispenser::Routine()
@@ -57,11 +55,13 @@ void Dispenser::ZigbeeReport()
     DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "motor speed      : %d", static_cast<uint32_t>(m_motor->GetSpeedMode()));
     DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "portion per turn : %.1f", m_calibrationPortionPerTurn);
     DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "portion weight   : %.1f", m_PortionWeight);
+    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "sleep mode       : %s", m_motor->GetSleepMode() ? "true" : "false");
 
-    updateTankFilling(ZB_EP, m_tankLevel);
-    updateMotorSpeed(ZB_EP, static_cast<uint32_t>(m_motor->GetSpeedMode()));
-    updateTurnPerPortion(ZB_EP, m_calibrationPortionPerTurn);
-    updateTurnPerPortion(ZB_EP, m_PortionWeight);
+    updateTankFilling(ZB_EP_USER, m_tankLevel);
+    updatePortionWeight(ZB_EP_USER, m_PortionWeight);
+    updateMotorSpeed(ZB_EP_CONFIG, static_cast<uint32_t>(m_motor->GetSpeedMode()));
+    updateTurnPerPortion(ZB_EP_CONFIG, m_calibrationPortionPerTurn);
+    updateSleepMode(ZB_EP_CONFIG, m_motor->GetSleepMode());
 }
 
 float Dispenser::_GetTankLevel()

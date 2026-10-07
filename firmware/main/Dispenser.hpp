@@ -48,7 +48,7 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_PortionWeight = std::clamp(value, 1.0f, 100.0f);
-        Memory::GetMemory().Set<float>(DATA_PORTION_PER_TURN, m_calibrationPortionPerTurn);
+        Memory::GetMemory().Set<float>(DATA_PORTION_WEIGHT, m_PortionWeight);
     }
     inline uint32_t GetMotorSpeed()
     {
@@ -62,7 +62,19 @@ public:
         m_motor->SetSpeed(speed);
         Memory::GetMemory().Set<uint32_t>(DATA_MOTOR_SPEED, static_cast<uint32_t>(speed));
     };
-
+    inline bool GetMotorSleepMode()
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_motor->GetSleepMode();
+    }
+    inline void SetMotorSleepMode(bool value)
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_motor->SetSleepMode(value);
+        Memory::GetMemory().Set<bool>(DATA_SLEEP_MODE, value);
+    };
+    
+    
     inline void DispenseFoodContinue(bool toggle)
     {
         std::lock_guard<std::mutex> lock(m_mutex);

@@ -3,14 +3,14 @@
 #include "driver/rmt_tx.h"
 #include "debug.hpp"
 
-#define STEP_PIN    (gpio_num_t)4
-#define DIR_PIN     (gpio_num_t)5
-
 static rmt_channel_handle_t ledc_chan = NULL;
 static rmt_encoder_handle_t copy_encoder = NULL;
 
 void Nema17::Init()
 {
+    gpio_set_direction(EN_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(EN_PIN, 1);
+
     gpio_set_direction(DIR_PIN, GPIO_MODE_OUTPUT);
     gpio_set_level(DIR_PIN, 0); // direction hardcoded
 
@@ -33,6 +33,10 @@ void Nema17::Start(float turns)
 #define CONTINOUS_MODE 0
 
     Stop();
+
+    // sleep mode
+    gpio_set_level(EN_PIN, 1);
+    vTaskDelay(pdMS_TO_TICKS(10));
 
     float numberOfRotations = (turns == CONTINOUS_MODE) ? 50 : turns;
     uint32_t stepDelay = _GetMotorStepDelayUs();
@@ -62,4 +66,10 @@ void Nema17::Stop()
 {
     rmt_disable(ledc_chan);
     rmt_enable(ledc_chan);
+
+    if (m_sleepMode)
+    {
+        vTaskDelay(pdMS_TO_TICKS(100));
+        gpio_set_level(EN_PIN, 0);
+    }
 }

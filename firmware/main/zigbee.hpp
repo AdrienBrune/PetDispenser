@@ -8,7 +8,8 @@
 #include "esp_zigbee_core.h"
 #include "atomic"
 
-#define ZB_EP                       1
+#define ZB_EP_USER                       1
+#define ZB_EP_CONFIG                     2
 
 #define CUSTOM_CLUSTER_ID           0xFF00 
 
@@ -23,3 +24,5 @@ esp_err_t initDevice();
 void updateTankFilling(uint8_t endpoint, float value);
 void updateMotorSpeed(uint8_t endpoint, uint32_t value);
 void updateTurnPerPortion(uint8_t endpoint, float value);
+void updatePortionWeight(uint8_t endpoint, float value);
+void updateSleepMode(uint8_t endpoint, bool value);

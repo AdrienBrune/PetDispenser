@@ -2,7 +2,9 @@
 
 #include <stdint.h>
 
-#define STEP_PIN (gpio_num_t)1
+#define EN_PIN      (gpio_num_t)12
+#define STEP_PIN    (gpio_num_t)4
+#define DIR_PIN     (gpio_num_t)5
 
 #define MOTOR_1_8_DEG_CARACTERISTIC 200
 #define MS1_MS2_MICROSTEPS_CONFIGURATION 64
@@ -18,7 +20,8 @@ class Nema17
 {
 public:
     Nema17():
-        m_speed(slow)
+        m_speed(slow),
+        m_sleepMode(true)
     {}
     ~Nema17(){}
 public:
@@ -26,8 +29,11 @@ public:
     void Start(float turns);
     void Stop();
 
-    const eMotorSpeed& GetSpeedMode() const { return m_speed; }
+    inline const eMotorSpeed& GetSpeedMode() const { return m_speed; }
     inline void SetSpeed(eMotorSpeed speed) { m_speed = speed; }
+
+    inline const bool& GetSleepMode() const { return m_sleepMode; }
+    inline void SetSleepMode(bool value) { m_sleepMode = value; }
 
 private:
     inline static uint32_t _GetMotorStepsPerTurn() { return MOTOR_1_8_DEG_CARACTERISTIC * MS1_MS2_MICROSTEPS_CONFIGURATION; }
@@ -35,4 +41,5 @@ private:
     inline uint32_t _GetRpmSpeed() { return (uint32_t)(60000000 / ((float)_GetMotorStepDelayUs() * _GetMotorStepsPerTurn())); }
 private:
     eMotorSpeed m_speed;
+    bool m_sleepMode;
 };

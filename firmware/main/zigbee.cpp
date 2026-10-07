@@ -13,7 +13,7 @@ static char modelName[] = { 0x0D, 'P', 'E', 'T', '-', 'D', 'I', 'S', 'P', 'E', '
 static char manufacturerName[] = { 0x06, 'C', 'U', 'S', 'T', 'O', 'M'};
 
 
-esp_zb_cluster_list_t* createClusterList()
+esp_zb_cluster_list_t* createUserClusterList()
 {
     uint8_t appVersion = 1;
     uint8_t stackVersion = 1;
@@ -21,7 +21,6 @@ esp_zb_cluster_list_t* createClusterList()
 
     esp_zb_cluster_list_t *list = esp_zb_zcl_cluster_list_create();
 
-    // BASIC
     esp_zb_basic_cluster_cfg_t basic_cfg = { .zcl_version = 3, .power_source = 0x03 };
     esp_zb_attribute_list_t *basic_cluster = esp_zb_basic_cluster_create(&basic_cfg);
     esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_APPLICATION_VERSION_ID, &appVersion);
@@ -31,21 +30,17 @@ esp_zb_cluster_list_t* createClusterList()
     esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, manufacturerName);
     esp_zb_cluster_list_add_basic_cluster(list, basic_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    // IDENTIFY
     esp_zb_identify_cluster_cfg_t identify_cfg = { .identify_time = 0, };
     esp_zb_attribute_list_t *identify_cluster = esp_zb_identify_cluster_create(&identify_cfg);
     esp_zb_cluster_list_add_identify_cluster(list, identify_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    // CUSTOM
     esp_zb_attribute_list_t *custom_cluster = esp_zb_zcl_attr_list_create(CUSTOM_CLUSTER_ID);
 
     Memory &memory = Memory::GetMemory();
     float default_tank_filling = memory.Get<float>(DATA_TANK_FILLING);
-    uint32_t default_motor_speed = memory.Get<uint32_t>(DATA_MOTOR_SPEED);
-    float default_turn_per_portion = memory.Get<float>(DATA_PORTION_PER_TURN);
+    float default_portion_weight = memory.Get<float>(DATA_PORTION_WEIGHT);
     bool default_trigger_dispense = false;
 
-    // Attribute [0] R/W
     esp_zb_custom_cluster_add_custom_attr(
         custom_cluster,
         ATTR_BUTTON_DISPENSE_ID,
@@ -55,7 +50,50 @@ esp_zb_cluster_list_t* createClusterList()
     );
     esp_zb_cluster_list_add_custom_cluster(list, custom_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    // Attribute [1] R/W (Cluster Multistate Value - 0x0014 pour motor_speed)
+    esp_zb_attribute_list_t *analog_value_attr_list = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE);
+    esp_zb_analog_value_cluster_add_attr(
+        analog_value_attr_list, 
+        ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID, 
+        &default_portion_weight
+    );
+    esp_zb_cluster_list_add_analog_value_cluster(list, analog_value_attr_list, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+
+    esp_zb_analog_input_cluster_cfg_t analog_input_cfg = {
+        .present_value = default_tank_filling
+    };
+    esp_zb_attribute_list_t *analog_input_cluster = esp_zb_analog_input_cluster_create(&analog_input_cfg);
+    esp_zb_analog_input_cluster_add_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, &default_tank_filling);
+    esp_zb_cluster_list_add_analog_input_cluster(list, analog_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+
+    return list;
+}
+
+esp_zb_cluster_list_t* createConfigClusterList()
+{
+    uint8_t appVersion = 1;
+    uint8_t stackVersion = 1;
+    uint8_t hwVersion = 1;
+
+    esp_zb_cluster_list_t *list = esp_zb_zcl_cluster_list_create();
+
+    esp_zb_basic_cluster_cfg_t basic_cfg = { .zcl_version = 3, .power_source = 0x03 };
+    esp_zb_attribute_list_t *basic_cluster = esp_zb_basic_cluster_create(&basic_cfg);
+    esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_APPLICATION_VERSION_ID, &appVersion);
+    esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_STACK_VERSION_ID, &stackVersion);
+    esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_HW_VERSION_ID, &hwVersion);
+    esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, modelName);
+    esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, manufacturerName);
+    esp_zb_cluster_list_add_basic_cluster(list, basic_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+
+    esp_zb_identify_cluster_cfg_t identify_cfg = { .identify_time = 0, };
+    esp_zb_attribute_list_t *identify_cluster = esp_zb_identify_cluster_create(&identify_cfg);
+    esp_zb_cluster_list_add_identify_cluster(list, identify_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+
+    Memory &memory = Memory::GetMemory();
+    uint32_t default_motor_speed = memory.Get<uint32_t>(DATA_MOTOR_SPEED);
+    float default_turn_per_portion = memory.Get<float>(DATA_PORTION_PER_TURN);
+    uint8_t default_sleep_mode = memory.Get<bool>(DATA_SLEEP_MODE);
+
     esp_zb_attribute_list_t *multistate_value_attr_list = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_MULTI_VALUE);
     esp_zb_multistate_value_cluster_add_attr(
         multistate_value_attr_list, 
@@ -64,7 +102,6 @@ esp_zb_cluster_list_t* createClusterList()
     );
     esp_zb_cluster_list_add_multistate_value_cluster(list, multistate_value_attr_list, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    // Attribute [2] R/W
     esp_zb_attribute_list_t *analog_value_attr_list = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE);
     esp_zb_analog_value_cluster_add_attr(
         analog_value_attr_list, 
@@ -73,13 +110,13 @@ esp_zb_cluster_list_t* createClusterList()
     );
     esp_zb_cluster_list_add_analog_value_cluster(list, analog_value_attr_list, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    // Attribute [3] R
-    esp_zb_analog_input_cluster_cfg_t analog_input_cfg = {
-        .present_value = default_tank_filling
-    };
-    esp_zb_attribute_list_t *analog_input_cluster = esp_zb_analog_input_cluster_create(&analog_input_cfg);
-    esp_zb_analog_input_cluster_add_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, &default_tank_filling);
-    esp_zb_cluster_list_add_analog_input_cluster(list, analog_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    esp_zb_attribute_list_t *binary_val_attr_list = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_BINARY_VALUE);
+    esp_zb_binary_value_cluster_add_attr(
+        binary_val_attr_list,
+        ESP_ZB_ZCL_ATTR_BINARY_VALUE_PRESENT_VALUE_ID,
+        &default_sleep_mode
+    );
+    esp_zb_cluster_list_add_binary_value_cluster(list, binary_val_attr_list, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
     return list;
 }
@@ -104,7 +141,7 @@ void updateTankFilling(uint8_t endpoint, float value)
             ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
             ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID,
             &value,
-            false // localy changed
+            false 
         );
         if (status != ESP_ZB_ZCL_STATUS_SUCCESS)
         {
@@ -151,7 +188,7 @@ void updateMotorSpeed(uint8_t endpoint, uint32_t value)
             ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
             ESP_ZB_ZCL_ATTR_MULTI_VALUE_PRESENT_VALUE_ID,
             &value,
-            false // localy changed
+            false 
         );
         if (status != ESP_ZB_ZCL_STATUS_SUCCESS)
         {
@@ -198,7 +235,7 @@ void updateTurnPerPortion(uint8_t endpoint, float value)
             ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
             ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID,
             &value,
-            false // localy changed
+            false 
         );
         if (status != ESP_ZB_ZCL_STATUS_SUCCESS)
         {
@@ -241,11 +278,11 @@ void updatePortionWeight(uint8_t endpoint, float value)
 
         esp_zb_zcl_status_t status = esp_zb_zcl_set_attribute_val(
             endpoint,
-            ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE, // CHANGÉ : Cluster standard Analog Value
+            ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE,
             ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-            ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID, // CHANGÉ : Attribut presentValue (0x0055)
+            ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID,
             &value,
-            false // localy changed
+            false 
         );
         if (status != ESP_ZB_ZCL_STATUS_SUCCESS)
         {
@@ -261,11 +298,60 @@ void updatePortionWeight(uint8_t endpoint, float value)
         report_cmd.zcl_basic_cmd.dst_addr_u.addr_short = 0x0000;
         report_cmd.zcl_basic_cmd.dst_endpoint = 1;
         report_cmd.zcl_basic_cmd.src_endpoint = endpoint;
-        report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE; // CHANGÉ
-        report_cmd.attributeID = ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID; // CHANGÉ
+        report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE;
+        report_cmd.attributeID = ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID;
         report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
         report_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
-        report_cmd.manuf_specific = 0; // CHANGÉ : Plus besoin de spécifique fabricant !
+        report_cmd.manuf_specific = 0;
+        esp_zb_zcl_report_attr_cmd_req(&report_cmd);
+
+        esp_zb_lock_release();
+    } 
+}
+
+void updateSleepMode(uint8_t endpoint, bool value)
+{
+    if (connected.load() == false)
+    {
+        DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_ERROR, "not connected to zigbee, can't report attribute");
+        return;
+    }
+
+    DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_INFO, "Try to update ep%d attribute to %s", endpoint, value ? "true" : "false");
+
+    if (esp_zb_lock_acquire(portMAX_DELAY))
+    {
+        DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_INFO, "Try to change attribute localy");
+
+        uint8_t boolean = value ? 1 : 0;
+
+        esp_zb_zcl_status_t status = esp_zb_zcl_set_attribute_val(
+            endpoint,
+            ESP_ZB_ZCL_CLUSTER_ID_BINARY_VALUE,
+            ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+            ESP_ZB_ZCL_ATTR_BINARY_VALUE_PRESENT_VALUE_ID,
+            &boolean,
+            false 
+        );
+        if (status != ESP_ZB_ZCL_STATUS_SUCCESS)
+        {
+            DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_ERROR, "set attribut localy failed");
+            esp_zb_lock_release();
+            return;
+        }
+
+        DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_INFO, "Try to send attribute to coordinator");
+
+        esp_zb_zcl_report_attr_cmd_t report_cmd;
+        memset(&report_cmd, 0, sizeof(esp_zb_zcl_report_attr_cmd_t));
+        report_cmd.zcl_basic_cmd.dst_addr_u.addr_short = 0x0000;
+        report_cmd.zcl_basic_cmd.dst_endpoint = 1;
+        report_cmd.zcl_basic_cmd.src_endpoint = endpoint;
+        report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BINARY_VALUE;
+        report_cmd.attributeID = ESP_ZB_ZCL_ATTR_BINARY_VALUE_PRESENT_VALUE_ID;
+        report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+        report_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
+        report_cmd.manuf_specific = 0;
         esp_zb_zcl_report_attr_cmd_req(&report_cmd);
 
         esp_zb_lock_release();
@@ -351,7 +437,7 @@ extern "C"  esp_err_t zbActionHandler(esp_zb_core_action_callback_id_t callback_
             DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_INFO, "Attribute %x updated on ep %d, cluster 0x%x by coordinator", 
                      set_attr_msg->attribute.id, set_attr_msg->info.dst_endpoint, set_attr_msg->info.cluster);
             
-            if (set_attr_msg->info.dst_endpoint == ZB_EP)
+            if (set_attr_msg->info.dst_endpoint == ZB_EP_USER)
             {
                 if (set_attr_msg->attribute.id == ATTR_BUTTON_DISPENSE_ID)
                 {
@@ -361,7 +447,17 @@ extern "C"  esp_err_t zbActionHandler(esp_zb_core_action_callback_id_t callback_
                         Dispenser::GetInstance().DispenseFoodPortion();
                     }
                 }
-                else if (set_attr_msg->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_VALUE && 
+                else if (set_attr_msg->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE && 
+                         set_attr_msg->attribute.id == ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID)
+                {
+                    float value = *(float*)set_attr_msg->attribute.data.value;
+                    DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_INFO, "value received: %.1f", value);
+                    Dispenser::GetInstance().SetPortionWeight(value);
+                }
+            }
+            else if (set_attr_msg->info.dst_endpoint == ZB_EP_CONFIG)
+            {
+                if (set_attr_msg->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_VALUE && 
                          set_attr_msg->attribute.id == ESP_ZB_ZCL_ATTR_MULTI_VALUE_PRESENT_VALUE_ID)
                 {
                     uint16_t value = *(uint16_t*)set_attr_msg->attribute.data.value;
@@ -375,10 +471,13 @@ extern "C"  esp_err_t zbActionHandler(esp_zb_core_action_callback_id_t callback_
                     DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_INFO, "value received: %.1f", value);
                     Dispenser::GetInstance().SetPortionPerTurnCalibration(value);
                 }
-                // else if ()
-                // {
-                //     // TODO 
-                // }
+                else if (set_attr_msg->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_BINARY_VALUE && 
+                         set_attr_msg->attribute.id == ESP_ZB_ZCL_ATTR_BINARY_VALUE_PRESENT_VALUE_ID)
+                {
+                    uint8_t value = *(uint8_t*)set_attr_msg->attribute.data.value;
+                    DebugLogger::GetInstance().print(DEBUG_ZIGBEE, DEBUG_INFO, "value received: %s", value ? "true" : "false");
+                    Dispenser::GetInstance().SetMotorSleepMode(value);
+                }
             }
             break;
         }
@@ -419,25 +518,17 @@ esp_err_t initZigbee()
     return ESP_OK;
 }
 
-// esp_err_t initZigbee()
-// {
-//     esp_zb_cfg_t cfg{};
-//     cfg.esp_zb_role = ESP_ZB_DEVICE_TYPE_ROUTER;
-//     cfg.install_code_policy = false;
-    
-//     esp_zb_init(&cfg);
-
-//     return ESP_OK;
-// }
-
 esp_err_t initDevice()
 {
     esp_zb_ep_list_t *ep_list = esp_zb_ep_list_create();
 
-    // EP 1 - Main
-    esp_zb_endpoint_config_t ep1_config = { .endpoint = ZB_EP, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, 
+    esp_zb_endpoint_config_t ep1_config = { .endpoint = ZB_EP_USER, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, 
                                             .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0 };
-    esp_zb_ep_list_add_ep(ep_list, createClusterList(), ep1_config);
+    esp_zb_ep_list_add_ep(ep_list, createUserClusterList(), ep1_config);
+    
+    esp_zb_endpoint_config_t ep2_config = { .endpoint = ZB_EP_CONFIG, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, 
+                                            .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0 };
+    esp_zb_ep_list_add_ep(ep_list, createConfigClusterList(), ep2_config);
 
     esp_zb_device_register(ep_list);
     esp_zb_core_action_handler_register(zbActionHandler);

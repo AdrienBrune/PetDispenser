@@ -14,6 +14,7 @@
 #define DATA_MOTOR_SPEED        "motor_speed"
 #define DATA_PORTION_PER_TURN   "calibration"
 #define DATA_PORTION_WEIGHT     "portion"
+#define DATA_SLEEP_MODE         "sleep_mode"
 
 class Data
 {
@@ -109,6 +110,7 @@ private:
         _CreateAttribute(DATA_MOTOR_SPEED, Data::eType::euint, static_cast<uint32_t>(eMotorSpeed::slow));
         _CreateAttribute(DATA_PORTION_PER_TURN, Data::eType::efloat, 25.0f);
         _CreateAttribute(DATA_PORTION_WEIGHT, Data::eType::efloat, 3.1f);
+        _CreateAttribute(DATA_SLEEP_MODE, Data::eType::ebool, false);
     }
 
     template<typename T>
