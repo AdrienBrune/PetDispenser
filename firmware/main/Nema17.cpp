@@ -12,7 +12,7 @@ void Nema17::Init()
     gpio_set_level(EN_PIN, 1);
 
     gpio_set_direction(DIR_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(DIR_PIN, 0); // direction hardcoded
+    gpio_set_level(DIR_PIN, 1); // direction hardcoded
 
     rmt_tx_channel_config_t tx_chan_config = {
         .gpio_num = STEP_PIN,
@@ -35,7 +35,7 @@ void Nema17::Start(float turns)
     Stop();
 
     // sleep mode
-    gpio_set_level(EN_PIN, 1);
+    gpio_set_level(EN_PIN, 0);
     vTaskDelay(pdMS_TO_TICKS(10));
 
     float numberOfRotations = (turns == CONTINOUS_MODE) ? 50 : turns;
@@ -70,6 +70,6 @@ void Nema17::Stop()
     if (m_sleepMode)
     {
         vTaskDelay(pdMS_TO_TICKS(100));
-        gpio_set_level(EN_PIN, 0);
+        gpio_set_level(EN_PIN, 1);
     }
 }

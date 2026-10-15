@@ -82,7 +82,7 @@ void InfraredSensor::Init()
 
     // Firmware init
     CHECK_VL53L1X_ERROR(VL53L1X_SensorInit(m_devId));
-    CHECK_VL53L1X_ERROR(VL53L1X_SetDistanceMode(m_devId, 2)); // long distance (4m)
+    CHECK_VL53L1X_ERROR(VL53L1X_SetDistanceMode(m_devId, 1)); // short distance (1m)
     CHECK_VL53L1X_ERROR(VL53L1X_SetTimingBudgetInMs(m_devId, 50)); // Budget 50ms
 
     // ROI configuration 16x16 -> 4x4
@@ -95,12 +95,12 @@ void InfraredSensor::Init()
     DebugLogger::GetInstance().print(DEBUG_SENSOR, DEBUG_INFO, "device initialized");
 }
 
-uint16_t InfraredSensor::GetDistance()
+int16_t InfraredSensor::GetDistance()
 {
     if (!m_devHandler)
     {
         DebugLogger::GetInstance().print(DEBUG_SENSOR, DEBUG_WARNING, "device has not been initialized");
-        return 0;
+        return -1;
     }
 
     uint8_t dataReady = 0;
@@ -121,13 +121,12 @@ uint16_t InfraredSensor::GetDistance()
     {
         VL53L1X_GetDistance(m_devId, &distance_mm);
         VL53L1X_ClearInterrupt(m_devId);
-        uint16_t distance_cm = (distance_mm + 5) / 10;
-        DebugLogger::GetInstance().print(DEBUG_SENSOR, DEBUG_INFO, "Distance measured: %d cm", distance_cm);
-        return distance_cm;
+        DebugLogger::GetInstance().print(DEBUG_SENSOR, DEBUG_INFO, "Distance measured: %d mm", distance_mm);
+        return static_cast<int16_t>(distance_mm);
     }
     else
     {
         DebugLogger::GetInstance().print(DEBUG_SENSOR, DEBUG_ERROR, "Distance data not ready (timeout)");
-        return 0;
+        return -1;
     }
 }

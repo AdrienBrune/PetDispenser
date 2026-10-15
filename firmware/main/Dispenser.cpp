@@ -4,6 +4,11 @@
 
 #define ZIGBEE_REPORTING_DELAY  60000
 
+struct CalibrationTank {
+    float distance_mm;
+    float percentage;
+};
+
 void Dispenser::Init()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -66,16 +71,52 @@ void Dispenser::ZigbeeReport()
 
 float Dispenser::_GetTankLevel()
 {
-    const uint32_t DISTANCE_CM_TANK_100_PERCENT = 2;
-    const uint32_t DISTANCE_CM_TANK_0_PERCENT = 16;
+    static const std::array<CalibrationTank, 2> calibrationTable = {{
+        {0.0f, 100.0f},
+        {110.0f, 0.0f}
+    }};
 
-    float filling = 0.0f;
-    uint16_t measurement = m_sensor->GetDistance();
-    if (measurement)
+    int16_t measurement = m_sensor->GetDistance();
+    if (measurement < 0)
     {
-        uint16_t distance = std::clamp<uint16_t>(measurement, DISTANCE_CM_TANK_100_PERCENT, DISTANCE_CM_TANK_0_PERCENT);
-        filling = (1.0f - (static_cast<float>(distance) / static_cast<float>(DISTANCE_CM_TANK_0_PERCENT))) * 100.0f;
-        DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "tank info: %f% (d=%dcm)", filling, measurement);
+        return m_tankLevel;
     }
-    return filling;
+
+    float distance_mm = static_cast<float>(measurement);
+    float currentFilling = 0.0f;
+
+    // linear interpolation
+    if (distance_mm <= calibrationTable.front().distance_mm)
+    {
+        currentFilling = calibrationTable.front().percentage;
+    }
+    else if (distance_mm >= calibrationTable.back().distance_mm)
+    {
+        currentFilling = calibrationTable.back().percentage;
+    }
+    else
+    {
+        for (size_t i = 0; i < calibrationTable.size() - 1; ++i)
+        {
+            if (distance_mm >= calibrationTable[i].distance_mm && distance_mm <= calibrationTable[i+1].distance_mm)
+            {
+                float x0 = calibrationTable[i].distance_mm;
+                float y0 = calibrationTable[i].percentage;
+                float x1 = calibrationTable[i+1].distance_mm;
+                float y1 = calibrationTable[i+1].percentage;
+                currentFilling = y0 + (y1 - y0) * (distance_mm - x0) / (x1 - x0);
+                break;
+            }
+        }
+    }
+    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "tank level computed: %.2f%% (d=%.0fmm)", currentFilling, distance_mm);
+
+    // threshold allowance to change value (5%)
+    if (m_tankLevel < 0.0f || std::abs(currentFilling - m_tankLevel) >= 5.0f)
+    {
+        m_tankLevel = std::roundf(currentFilling);
+        DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "tank info updated: %.2f%%", m_tankLevel);
+    }
+
+    return m_tankLevel;
 }

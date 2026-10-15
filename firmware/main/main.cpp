@@ -59,7 +59,19 @@ void _task_dispenser(void *pvParameters)
 }
 
 
-static void IRAM_ATTR gpio_isr_handler(void* arg)
+static void IRAM_ATTR zb_gpio_isr_handler(void* arg)
+{
+    uint32_t gpio_num = (uint32_t) arg;
+    button_event_t ev;
+    ev.pin = gpio_num;
+    ev.level = gpio_get_level((gpio_num_t)gpio_num);
+    ev.timestamp = xTaskGetTickCountFromISR();
+    
+    // send the event via queue
+    xQueueSendFromISR(gpio_evt_queue, &ev, NULL);
+}
+
+static void IRAM_ATTR dispense_gpio_isr_handler(void* arg)
 {
     uint32_t gpio_num = (uint32_t) arg;
     button_event_t ev;
@@ -87,7 +99,8 @@ void _task_button(void *pvParameters)
 
     // start ISR
     gpio_install_isr_service(0);
-    gpio_isr_handler_add((gpio_num_t)ZB_BTN_PIN, gpio_isr_handler, (void*) ZB_BTN_PIN);
+    gpio_isr_handler_add((gpio_num_t)ZB_BTN_PIN, zb_gpio_isr_handler, (void*) ZB_BTN_PIN);
+    gpio_isr_handler_add((gpio_num_t)DISPENSE_BTN_PIN, dispense_gpio_isr_handler, (void*) DISPENSE_BTN_PIN);
 
     while (1)
     {
@@ -144,7 +157,7 @@ void _task_button(void *pvParameters)
                     }
                 }
             }
-            else // DISPENSE_BTN_PIN
+            else if (ev.pin == DISPENSE_BTN_PIN)
             {
                 if (ev.level == 0) // rising edge
                 {
@@ -155,7 +168,6 @@ void _task_button(void *pvParameters)
                     Dispenser::GetInstance().DispenseFoodContinue(false);
                 }
             }
-            
         }
         vTaskDelay(pdMS_TO_TICKS(50));
     }

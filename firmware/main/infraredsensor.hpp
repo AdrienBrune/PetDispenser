@@ -33,7 +33,7 @@ public:
 
 public:
     void Init();
-    uint16_t GetDistance();
+    int16_t GetDistance();
 
 private:
     I2C_Desc m_i2cDesc;

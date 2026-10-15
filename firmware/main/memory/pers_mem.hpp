@@ -108,8 +108,8 @@ private:
     {
         _CreateAttribute(DATA_TANK_FILLING, Data::eType::efloat, 0.0f);
         _CreateAttribute(DATA_MOTOR_SPEED, Data::eType::euint, static_cast<uint32_t>(eMotorSpeed::slow));
-        _CreateAttribute(DATA_PORTION_PER_TURN, Data::eType::efloat, 25.0f);
-        _CreateAttribute(DATA_PORTION_WEIGHT, Data::eType::efloat, 3.1f);
+        _CreateAttribute(DATA_PORTION_PER_TURN, Data::eType::efloat, 4.0f);
+        _CreateAttribute(DATA_PORTION_WEIGHT, Data::eType::efloat, 35.0f);
         _CreateAttribute(DATA_SLEEP_MODE, Data::eType::ebool, false);
     }
 

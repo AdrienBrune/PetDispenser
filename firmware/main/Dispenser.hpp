@@ -36,7 +36,7 @@ public:
     inline void SetPortionPerTurnCalibration(float value)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_calibrationPortionPerTurn = std::clamp(value, 5.0f, 80.0f);
+        m_calibrationPortionPerTurn = std::clamp(value, 1.0f, 10.0f);
         Memory::GetMemory().Set<float>(DATA_PORTION_PER_TURN, m_calibrationPortionPerTurn);
     }
     inline float GetPortionWeight()
@@ -78,7 +78,14 @@ public:
     inline void DispenseFoodContinue(bool toggle)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_motor->Start(0/*continous*/);
+        if (toggle)
+        {
+            m_motor->Start(0/*continous*/);
+        }
+        else
+        {
+            m_motor->Stop();
+        }
     }
     inline void DispenseFoodPortion()
     {
