@@ -28,25 +28,28 @@ void _task_zigbee(void *pvParameters)
     if(initZigbee() != ESP_OK)
     {
         DebugLogger::GetInstance().print(DEBUG_TASK, DEBUG_ERROR, "ZIGBEE init failure");
-        return;
     }
-
-    if(initDevice() != ESP_OK)
+    else if(initDevice() != ESP_OK)
     {
         DebugLogger::GetInstance().print(DEBUG_TASK, DEBUG_ERROR, "ZIGBEE device registration failure");
-        return;
     }
-
-    esp_zb_set_rx_on_when_idle(false);
-
-    if(esp_zb_start(false) != ESP_OK)
+    else
     {
-        DebugLogger::GetInstance().print(DEBUG_TASK, DEBUG_ERROR, "ZIGBEE hasn't started");
-        return;
+        esp_zb_set_rx_on_when_idle(false);
+
+        if(esp_zb_start(false) != ESP_OK)
+        {
+            DebugLogger::GetInstance().print(DEBUG_TASK, DEBUG_ERROR, "ZIGBEE hasn't started");
+        }
+        else
+        {
+            DebugLogger::GetInstance().print(DEBUG_TASK, DEBUG_INFO, "ZIGBEE main loop started");
+            esp_zb_stack_main_loop(); // never returns
+        }
     }
 
-    DebugLogger::GetInstance().print(DEBUG_TASK, DEBUG_INFO, "ZIGBEE main loop started");
-    esp_zb_stack_main_loop();
+    // a FreeRTOS task must never return
+    vTaskDelete(NULL);
 }
 
 
@@ -56,6 +59,9 @@ void _task_dispenser(void *pvParameters)
 
     dispenser.Init();
     dispenser.Routine();
+
+    // a FreeRTOS task must never return
+    vTaskDelete(NULL);
 }
 
 
