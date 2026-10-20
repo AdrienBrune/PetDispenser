@@ -60,9 +60,8 @@ esp_zb_cluster_list_t* createUserClusterList()
     );
     esp_zb_cluster_list_add_analog_value_cluster(list, analog_value_attr_list, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    esp_zb_analog_input_cluster_cfg_t analog_input_cfg = {
-        .present_value = default_tank_filling
-    };
+    esp_zb_analog_input_cluster_cfg_t analog_input_cfg = {};
+    analog_input_cfg.present_value = default_tank_filling;
     esp_zb_attribute_list_t *analog_input_cluster = esp_zb_analog_input_cluster_create(&analog_input_cfg);
     esp_zb_analog_input_cluster_add_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, &default_tank_filling);
     esp_zb_cluster_list_add_analog_input_cluster(list, analog_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);

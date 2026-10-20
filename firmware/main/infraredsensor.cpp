@@ -20,16 +20,13 @@
 
 void InfraredSensor::Init()
 {
-    i2c_master_bus_config_t busConfig = {
-        .i2c_port = m_i2cDesc.port,
-        .sda_io_num = m_i2cDesc.sda,
-        .scl_io_num = m_i2cDesc.scl,
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = 7,
-        .flags = {
-            .enable_internal_pullup = true
-        }
-    };
+    i2c_master_bus_config_t busConfig = {};
+    busConfig.i2c_port = m_i2cDesc.port;
+    busConfig.sda_io_num = m_i2cDesc.sda;
+    busConfig.scl_io_num = m_i2cDesc.scl;
+    busConfig.clk_source = I2C_CLK_SRC_DEFAULT;
+    busConfig.glitch_ignore_cnt = 7;
+    busConfig.flags.enable_internal_pullup = true;
 
     i2c_master_bus_handle_t busHandle;
     if (i2c_new_master_bus(&busConfig, &busHandle) != ESP_OK)
@@ -42,11 +39,10 @@ void InfraredSensor::Init()
         DebugLogger::GetInstance().print(DEBUG_SENSOR, DEBUG_ERROR, "Aucun périphérique à l'adresse 0x29");
     }
 
-    i2c_device_config_t devConfig = {
-        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address = static_cast<uint16_t>(m_i2cAddress >> 1), // (7bits)
-        .scl_speed_hz = 400000,
-    };
+    i2c_device_config_t devConfig = {};
+    devConfig.dev_addr_length = I2C_ADDR_BIT_LEN_7;
+    devConfig.device_address = static_cast<uint16_t>(m_i2cAddress >> 1); // (7bits)
+    devConfig.scl_speed_hz = 400000;
 
     if (i2c_master_bus_add_device(busHandle, &devConfig, &m_devHandler) != ESP_OK)
     {

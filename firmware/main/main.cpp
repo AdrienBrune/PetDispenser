@@ -196,10 +196,9 @@ extern "C" void app_main(void)
         return;
     }
 
-    esp_zb_platform_config_t config = {
-        .radio_config = { .radio_mode = ZB_RADIO_MODE_NATIVE },
-        .host_config = { .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE },
-    };
+    esp_zb_platform_config_t config = {};
+    config.radio_config.radio_mode = ZB_RADIO_MODE_NATIVE;
+    config.host_config.host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE;
     if(esp_zb_platform_config(&config) != ESP_OK)
     {
         DebugLogger::GetInstance().print(DEBUG_GENERIC, DEBUG_ERROR, "ZIGBEE init failure, program stopped");
