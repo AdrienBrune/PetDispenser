@@ -58,7 +58,7 @@ public:
     inline void SetMotorSpeed(uint32_t value)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        eMotorSpeed speed = std::clamp(static_cast<eMotorSpeed>(value), eMotorSpeed::slow, eMotorSpeed::fast);
+        eMotorSpeed speed = static_cast<eMotorSpeed>(std::clamp(value, static_cast<uint32_t>(eMotorSpeed::slow), static_cast<uint32_t>(eMotorSpeed::fast)));
         m_motor->SetSpeed(speed);
         Memory::GetMemory().Set<uint32_t>(DATA_MOTOR_SPEED, static_cast<uint32_t>(speed));
     };
