@@ -9,7 +9,7 @@
 
 #include "Nema17.hpp"
 
-// label length must not exceed 14 character
+// label length must not exceed 15 character
 #define DATA_TANK_FILLING       "tank_filling"
 #define DATA_MOTOR_SPEED        "motor_speed"
 #define DATA_PORTION_PER_TURN   "calibration"

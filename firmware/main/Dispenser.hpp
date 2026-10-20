@@ -19,7 +19,7 @@ private:
     Dispenser():
         m_sensor(nullptr),
         m_motor(nullptr),
-        m_calibrationPortionPerTurn(25.0f),
+        m_calibrationPortionPerTurn(1.0f),
         m_PortionWeight(5.0f),
         m_tankLevel(0.0f)
     {}
@@ -100,7 +100,6 @@ public:
     void ZigbeeReport();
 private:
     float _GetTankLevel();
-    void _DisplayRemainingMotorTour();
 private:
     std::mutex m_mutex;
     std::unique_ptr<InfraredSensor> m_sensor;

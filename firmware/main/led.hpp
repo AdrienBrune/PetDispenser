@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <mutex>
 #include "driver/gpio.h"
 
 #define ZB_LED_PIN (gpio_num_t)1

@@ -85,7 +85,7 @@ void InfraredSensor::Init()
     CHECK_VL53L1X_ERROR(VL53L1X_SetDistanceMode(m_devId, 1)); // short distance (1m)
     CHECK_VL53L1X_ERROR(VL53L1X_SetTimingBudgetInMs(m_devId, 50)); // Budget 50ms
 
-    // ROI configuration 16x16 -> 4x4
+    // ROI configuration 16x16 -> 8x8
     CHECK_VL53L1X_ERROR(VL53L1X_SetROI(m_devId, 8, 8));
     CHECK_VL53L1X_ERROR(VL53L1X_SetROICenter(m_devId, 199));
 

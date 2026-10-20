@@ -32,6 +32,13 @@ void Nema17::Start(float turns)
 {
 #define CONTINOUS_MODE 0
 
+    static rmt_symbol_word_t step_symbol = {
+        .duration0 = 1,
+        .level0 = 1,
+        .duration1 = 1,
+        .level1 = 0,
+    };
+
     Stop();
 
     // sleep mode
@@ -48,12 +55,8 @@ void Nema17::Start(float turns)
     // Start RMT engine
     uint16_t high_time = 2; 
     uint16_t low_time = (stepDelay > high_time) ? (stepDelay - high_time) : 10;
-    rmt_symbol_word_t step_symbol = {
-        .duration0 = high_time,
-        .level0 = 1,
-        .duration1 = low_time,
-        .level1 = 0,
-    };
+    step_symbol.duration0 = high_time;
+    step_symbol.duration1 = low_time;
     rmt_transmit_config_t tx_config = {
         .loop_count = static_cast<int>(numberOfSteps) - 1, 
     };

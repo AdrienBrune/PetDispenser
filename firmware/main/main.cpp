@@ -106,7 +106,7 @@ void _task_button(void *pvParameters)
     {
         if (xQueueReceive(gpio_evt_queue, &ev, portMAX_DELAY))
         {
-            DebugLogger::GetInstance().print(DEBUG_BUTTONS, DEBUG_INFO, "Button event detected: %s", ev.pin == ZB_BTN_PIN ? "zigbee buttin" : "dispense button");
+            DebugLogger::GetInstance().print(DEBUG_BUTTONS, DEBUG_INFO, "Button event detected: %s", ev.pin == ZB_BTN_PIN ? "zigbee button" : "dispense button");
             
             ev.level == 0 ? 
                 DebugLogger::GetInstance().print(DEBUG_BUTTONS, DEBUG_INFO, "Button pressed") :
@@ -117,14 +117,13 @@ void _task_button(void *pvParameters)
                 if (ev.level == 0) // rising edge
                 {
                     zbBtnPressStartTicks = ev.timestamp;
-                    DebugLogger::GetInstance().print(DEBUG_BUTTONS, DEBUG_INFO, "Button pressed");
                 }
                 else // falling edge
                 {
                     TickType_t pressDuration = ev.timestamp - zbBtnPressStartTicks;
                     uint32_t duration_ms = pdTICKS_TO_MS(pressDuration);
 
-                    DebugLogger::GetInstance().print(DEBUG_BUTTONS, DEBUG_INFO, "Button released after %lu ms", duration_ms);
+                    DebugLogger::GetInstance().print(DEBUG_BUTTONS, DEBUG_INFO, "after %lu ms", duration_ms);
 
                     if (duration_ms > 5000)
                     {
@@ -209,5 +208,5 @@ extern "C" void app_main(void)
 
     xTaskCreatePinnedToCore(_task_dispenser, "dispenser", 4096, NULL, 2, NULL, 0);
     xTaskCreatePinnedToCore(_task_button, "button", 4096, NULL, 1, NULL, 0);
-    xTaskCreatePinnedToCore(_task_zigbee, "zigbee", 8124, NULL, 3, NULL, 0);
+    xTaskCreatePinnedToCore(_task_zigbee, "zigbee", 8192, NULL, 3, NULL, 0);
 }
