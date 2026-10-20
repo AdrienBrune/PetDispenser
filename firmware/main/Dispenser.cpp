@@ -53,20 +53,34 @@ void Dispenser::Routine()
 
 void Dispenser::ZigbeeReport()
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    float tankLevel;
+    float portionWeight;
+    float portionPerTurn;
+    uint32_t motorSpeed;
+    bool sleepMode;
+
+    { // mutex context: snapshot only, never call zigbee API while holding m_mutex
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        tankLevel = m_tankLevel;
+        portionWeight = m_PortionWeight;
+        portionPerTurn = m_calibrationPortionPerTurn;
+        motorSpeed = static_cast<uint32_t>(m_motor->GetSpeedMode());
+        sleepMode = m_motor->GetSleepMode();
+    }
 
     DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "Start Zigbee report");
-    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "tank level       : %2.0f", m_tankLevel);
-    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "motor speed      : %d", static_cast<uint32_t>(m_motor->GetSpeedMode()));
-    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "portion per turn : %.1f", m_calibrationPortionPerTurn);
-    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "portion weight   : %.1f", m_PortionWeight);
-    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "sleep mode       : %s", m_motor->GetSleepMode() ? "true" : "false");
+    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "tank level       : %2.0f", tankLevel);
+    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "motor speed      : %lu", motorSpeed);
+    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "portion per turn : %.1f", portionPerTurn);
+    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "portion weight   : %.1f", portionWeight);
+    DebugLogger::GetInstance().print(DEBUG_DISPENSER, DEBUG_INFO, "sleep mode       : %s", sleepMode ? "true" : "false");
 
-    updateTankFilling(ZB_EP_USER, m_tankLevel);
-    updatePortionWeight(ZB_EP_USER, m_PortionWeight);
-    updateMotorSpeed(ZB_EP_CONFIG, static_cast<uint32_t>(m_motor->GetSpeedMode()));
-    updateTurnPerPortion(ZB_EP_CONFIG, m_calibrationPortionPerTurn);
-    updateSleepMode(ZB_EP_CONFIG, m_motor->GetSleepMode());
+    updateTankFilling(ZB_EP_USER, tankLevel);
+    updatePortionWeight(ZB_EP_USER, portionWeight);
+    updateMotorSpeed(ZB_EP_CONFIG, motorSpeed);
+    updateTurnPerPortion(ZB_EP_CONFIG, portionPerTurn);
+    updateSleepMode(ZB_EP_CONFIG, sleepMode);
 }
 
 float Dispenser::_GetTankLevel()
